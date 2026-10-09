@@ -113,7 +113,13 @@ class Message(object):
                     text += self._format_rich_text_element(element)
             elif "fields" in block:
                 for field in block["fields"]:
-                    text += self._format_block_type(field, block["type"])
+                    if "value" in field:
+                        field_text = field.get("value", "")
+                        field_text = self.slack_to_accepted_emoji(field_text)
+                        field_text = emoji.emojize(field_text, language='alias')
+                        text += field_text
+                    else:
+                        logging.warning(f"Field missing 'value': {field}")
             elif "elements" in block:
                 for element in block["elements"]:
                     text += self._format_block_type(element, block["type"])
