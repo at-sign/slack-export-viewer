@@ -149,11 +149,25 @@ class Message(object):
 
         elif element["type"] == "link":
             text = element.get('text', "")
-            if not text:
-                text = element['url'].replace("\\/", "/")
+            url = element.get('url', '')
 
+            # Unescape forward slashes in the URL
+            # Slack's block kit JSON sometimes encodes forward slashes
+            # as ""\\/" (a valid JSON escape). Python'sjson module may
+            # leave these as literal backslash+slash depending on the serialiser,
+            # so this replacement normalises them before using the URL as display text.
+            url = url.replace("\\/", "/")
+
+            if not text:
+                text = url
+
+            # Escape underscores only in display text, not in URL
             text = text.replace("_", "&#95;")
-            return f"<a href='{element['url']}'>{text}</a>"
+
+            # Escape quotes in URL for safe href attribute
+            url = url.replace('"', "&quot;")
+
+            return f'<a href="{url}">{text}</a>'
 
         elif element["type"] == "user":
             user = self._formatter.find_user(self.user_message(element['user_id']))
