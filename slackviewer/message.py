@@ -217,11 +217,15 @@ class Message(object):
             list_text = ""
             if element["style"] == "bullet":
                 list_text += "<ul>"
-                list_text += "\n".join(f"<li>{self._format_rich_text_element(nested_element)}</li>" for nested_element in element["elements"])
+                for item in element["elements"]:
+                    item_content = ''.join(self._format_rich_text_element(nested) for nested in item.get("elements", []))
+                    list_text += f"<li>{item_content}</li>\n"
                 list_text += "</ul>\n"
             elif element["style"] == "ordered":
                 list_text += "<ol>"
-                list_text += "\n".join(f"<li>{self._format_rich_text_element(nested_element)}</li>" for nested_element in element["elements"])
+                for item in element["elements"]:
+                    item_content = ''.join(self._format_rich_text_element(nested) for nested in item.get("elements", []))
+                    list_text += f"<li>{item_content}</li>\n"
                 list_text += "</ol>\n"
             else:
                 logging.warning(f"Unsupported rich text list style '{element['style']}' for {element}")
