@@ -104,6 +104,8 @@ class Message(object):
 
     def _generate_blocks_text(self, blocks):
         """Build a message together from various message["blocks"]"""
+        # Pre-process blocks to nest lists that follow blockquotes
+        blocks = self._merge_blockquote_lists(blocks)
         text = ""
         for block in blocks:
             if block["type"] == "image":
@@ -122,6 +124,41 @@ class Message(object):
             else:
                 logging.warning(f"Unknown block type: {block}")
         return text
+
+    def _merge_blockquote_lists(self, blocks):
+        """
+        Slack's JSON structure doesn't semantically nest lists within quotes,
+        so this corrects that representation before formatting
+        Pre-process blocks to nest rich_text_list elements that immediately
+        follow rich_text_quote elements inside the quote's elements array.
+        """
+        merged = []
+        for block in blocks:
+            # If this is a rich_text block, merge quote+list within its elements
+            if block["type"] == "rich_text" and "elements" in block:
+                elements = block["elements"]
+                merged_elements = []
+                i = 0
+
+                while i < len(elements):
+                    element = elements[i]
+
+                    # Check if this is a quote and the next element is a list
+                    if (element["type"] == "rich_text_quote" and
+                        i + 1 < len(elements) and
+                        elements[i + 1]["type"] == "rich_text_list"):
+
+                        # Append the list to the quote's elements
+                        element["elements"].append(elements[i + 1])
+                        merged_elements.append(element)
+                        i += 2  # Skip both quote and list
+                    else:
+                        merged_elements.append(element)
+                        i += 1
+
+                block["elements"] = merged_elements
+            merged.append(block)
+        return merged
 
     def _format_rich_text_element(self, element):
         """Format rich text elements based on their type and styles"""
