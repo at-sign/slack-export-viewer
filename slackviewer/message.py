@@ -490,7 +490,6 @@ class LinkAttachment():
         Returns:
             Normalized URL with standard size
         """
-        import re
 
         # Match any pixel value in the URL (e.g., "1200px-", "15px-", etc.)
         match = re.search(r'(\d+)px-', url)
