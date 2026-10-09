@@ -201,29 +201,8 @@ class Message(object):
             preformatted_text = ""
             for nested_element in element["elements"]:
                 if nested_element["type"] == "text":
-                    # Escape HTML special characters to prevent rendering
-                    text = nested_element["text"]
-                    text = text.replace("&", "&amp;")
-                    text = text.replace("<", "&lt;")
-                    text = text.replace(">", "&gt;")
-                    text = text.replace('"', "&quot;")
-                    text = text.replace("'", "&#39;")
-                    text = text.replace("_", "&#95;")
-                    preformatted_text += text
-                elif nested_element["type"] == "link":
-                    # For links in preformatted text, output the URL as plain text, not HTML
-                    url = nested_element.get("url", "")
-                    text = nested_element.get("text", url)
-                    # Escape the URL/text as well
-                    text = text.replace("&", "&amp;")
-                    text = text.replace("<", "&lt;")
-                    text = text.replace(">", "&gt;")
-                    preformatted_text += text
-                else:
-                    # For any other nested elements, just get their text representation
-                    # without converting to HTML
-                    preformatted_text += self._get_plain_text_from_element(nested_element)
-
+                    nested_element["text"] = nested_element["text"].replace("_", "&#95;")
+                preformatted_text += self._format_rich_text_element(nested_element)
             return f"<pre>{preformatted_text}</pre>"
 
         elif element["type"] == "channel":
